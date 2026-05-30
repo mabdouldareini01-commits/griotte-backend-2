@@ -9,17 +9,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AppModule = void 0;
 const common_1 = require("@nestjs/common");
 const config_1 = require("@nestjs/config");
-const throttler_1 = require("@nestjs/throttler");
 const prisma_module_1 = require("./prisma/prisma.module");
 const auth_module_1 = require("./auth/auth.module");
-const users_module_1 = require("./users/users.module");
+const users_module_1 = require("./users.module");
 const books_module_1 = require("./books/books.module");
-const chapters_module_1 = require("./chapters/chapters.module");
 const reading_module_1 = require("./reading/reading.module");
-const transactions_module_1 = require("./transactions/transactions.module");
 const wallets_module_1 = require("./wallets/wallets.module");
 const notifications_module_1 = require("./notifications/notifications.module");
 const withdrawals_module_1 = require("./withdrawals/withdrawals.module");
+const transactions_module_1 = require("./transactions/transactions.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -27,17 +25,15 @@ exports.AppModule = AppModule = __decorate([
     (0, common_1.Module)({
         imports: [
             config_1.ConfigModule.forRoot({ isGlobal: true }),
-            throttler_1.ThrottlerModule.forRoot([{ ttl: 60000, limit: 100 }]),
             prisma_module_1.PrismaModule,
             auth_module_1.AuthModule,
             users_module_1.UsersModule,
             books_module_1.BooksModule,
-            chapters_module_1.ChaptersModule,
             reading_module_1.ReadingModule,
-            transactions_module_1.TransactionsModule,
             wallets_module_1.WalletsModule,
             notifications_module_1.NotificationsModule,
             withdrawals_module_1.WithdrawalsModule,
+            transactions_module_1.TransactionsModule,
         ],
     })
 ], AppModule);
