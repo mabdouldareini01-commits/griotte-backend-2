@@ -15,7 +15,7 @@ async function bootstrap() {
         transformOptions: { enableImplicitConversion: true },
     }));
     app.enableCors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+        origin: ['https://griotte-frontend-git-main-lawenignina.vercel.app', 'http://localhost:3000'],
         credentials: true,
     });
     const config = new swagger_1.DocumentBuilder()
