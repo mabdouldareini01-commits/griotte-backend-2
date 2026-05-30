@@ -6,17 +6,17 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.WalletsModule = void 0;
+exports.NotificationsModule = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_module_1 = require("../prisma/prisma.module");
-let WalletsModule = class WalletsModule {
+let NotificationsModule = class NotificationsModule {
 };
-exports.WalletsModule = WalletsModule;
-exports.WalletsModule = WalletsModule = __decorate([
+exports.NotificationsModule = NotificationsModule;
+exports.NotificationsModule = NotificationsModule = __decorate([
     (0, common_1.Module)({
         imports: [prisma_module_1.PrismaModule],
         providers: [],
         exports: [],
     })
-], WalletsModule);
-//# sourceMappingURL=wallets.service.js.map
+], NotificationsModule);
+//# sourceMappingURL=notifications.module.js.map
