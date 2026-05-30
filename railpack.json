@@ -1,6 +1,5 @@
 {
   "$schema": "https://schema.railpack.com",
-  "installCmd": "rm -rf node_modules && npm install --legacy-peer-deps --include=dev",
-  "buildCmd": "npm run build"
+  "buildCmd": "rm -rf node_modules && npm install --legacy-peer-deps --include=dev && npm run build"
 }
 
