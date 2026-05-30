@@ -1,1 +1,5 @@
-{"installCommand":"npm install --legacy-peer-deps"} 
+{
+  "$schema": "https://schema.railpack.com",
+  "installCmd": "npm install --legacy-peer-deps"
+}
+
