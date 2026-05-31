@@ -1,5 +1,6 @@
 {
   "$schema": "https://schema.railpack.com",
+  "provider": "node",
   "buildCmd": "npm install --legacy-peer-deps --include=dev && npx prisma generate && npm run build",
   "startCmd": "node dist/main.js"
 }
