@@ -1,4 +1,4 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -36,5 +36,31 @@ export class AuthController {
     if (!valid) return { message: 'Identifiants invalides' };
     const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
     return { accessToken: token, refreshToken: token };
+  }
+}@Get('google')
+async googleAuth(@Res() res: any) {
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=792385948983-j9a3kh1rvg5kp1p4n6k745s1f45lcf0f.apps.googleusercontent.com&redirect_uri=https://griotte-backend-2-production.up.railway.app/api/v1/auth/google/callback&response_type=code&scope=email profile`;
+  res.redirect(url);
+}
+
+@Get('google/callback')
+async googleCallback(@Query('code') code: string, @Res() res: any) {
+  try {
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, client_id: '792385948983-j9a3kh1rvg5kp1p4n6k745s1f45lcf0f.apps.googleusercontent.com', client_secret: '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', redirect_uri: 'https://griotte-backend-2-production.up.railway.app/api/v1/auth/google/callback', grant_type: 'authorization_code' }),
+    });
+    const tokenData = await tokenRes.json();
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
+    const googleUser = await userRes.json();
+    let user = await this.prisma.user.findUnique({ where: { email: googleUser.email } });
+    if (!user) {
+      user = await this.prisma.user.create({ data: { email: googleUser.email, name: googleUser.name, password: '', role: 'READER', wallet: { create: { balance: 0 } } } });
+    }
+    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
+    res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard-lecteur.html?token=${token}`);
+  } catch(e) {
+    res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
   }
 }
