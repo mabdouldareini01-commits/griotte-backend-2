@@ -17,4 +17,6 @@ export declare class AuthController {
         refreshToken: string;
         message?: undefined;
     }>;
+    googleAuth(res: any): Promise<any>;
+    googleCallback(code: string, res: any): Promise<any>;
 }

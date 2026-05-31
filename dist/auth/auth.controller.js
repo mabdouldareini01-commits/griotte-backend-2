@@ -47,6 +47,49 @@ let AuthController = class AuthController {
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
         return { accessToken: token, refreshToken: token };
     }
+    async googleAuth(res) {
+        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${callbackUrl}&response_type=code&scope=email profile`;
+        return res.redirect(url);
+    }
+    async googleCallback(code, res) {
+        try {
+            const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code,
+                    client_id: process.env.GOOGLE_CLIENT_ID,
+                    client_secret: process.env.GOOGLE_CLIENT_SECRET,
+                    redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+                    grant_type: 'authorization_code',
+                }),
+            });
+            const tokenData = await tokenRes.json();
+            const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                headers: { Authorization: `Bearer ${tokenData.access_token}` },
+            });
+            const googleUser = await userRes.json();
+            let user = await this.prisma.user.findUnique({ where: { email: googleUser.email } });
+            if (!user) {
+                user = await this.prisma.user.create({
+                    data: {
+                        email: googleUser.email,
+                        name: googleUser.name,
+                        password: '',
+                        role: 'READER',
+                        wallet: { create: { balance: 0 } },
+                    },
+                });
+            }
+            const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
+            return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard-lecteur.html?token=${token}`);
+        }
+        catch (e) {
+            return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
+        }
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -63,6 +106,21 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Get)('google'),
+    __param(0, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleAuth", null);
+__decorate([
+    (0, common_1.Get)('google/callback'),
+    __param(0, (0, common_1.Query)('code')),
+    __param(1, (0, common_1.Res)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "googleCallback", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),

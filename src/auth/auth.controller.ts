@@ -37,30 +37,50 @@ export class AuthController {
     const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
     return { accessToken: token, refreshToken: token };
   }
-}@Get('google')
-async googleAuth(@Res() res: any) {
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
-  res.redirect(url);
-}
 
-@Get('google/callback')
-async googleCallback(@Query('code') code: string, @Res() res: any) {
-  try {
-    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, client_id: '${process.env.GOOGLE_CLIENT_ID}', client_secret: '${process.env.GOOGLE_CLIENT_SECRET}', redirect_uri: '${process.env.GOOGLE_CALLBACK_URL}', grant_type: 'authorization_code' }),
-    });
-    const tokenData = await tokenRes.json();
-    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
-    const googleUser = await userRes.json();
-    let user = await this.prisma.user.findUnique({ where: { email: googleUser.email } });
-    if (!user) {
-      user = await this.prisma.user.create({ data: { email: googleUser.email, name: googleUser.name, password: '', role: 'READER', wallet: { create: { balance: 0 } } } });
+  @Get('google')
+  async googleAuth(@Res() res: any) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${callbackUrl}&response_type=code&scope=email profile`;
+    return res.redirect(url);
+  }
+
+  @Get('google/callback')
+  async googleCallback(@Query('code') code: string, @Res() res: any) {
+    try {
+      const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          client_id: process.env.GOOGLE_CLIENT_ID,
+          client_secret: process.env.GOOGLE_CLIENT_SECRET,
+          redirect_uri: process.env.GOOGLE_CALLBACK_URL,
+          grant_type: 'authorization_code',
+        }),
+      });
+      const tokenData: any = await tokenRes.json();
+      const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      });
+      const googleUser: any = await userRes.json();
+      let user = await this.prisma.user.findUnique({ where: { email: googleUser.email } });
+      if (!user) {
+        user = await this.prisma.user.create({
+          data: {
+            email: googleUser.email,
+            name: googleUser.name,
+            password: '',
+            role: 'READER',
+            wallet: { create: { balance: 0 } },
+          },
+        });
+      }
+      const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
+      return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard-lecteur.html?token=${token}`);
+    } catch(e) {
+      return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
     }
-    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-    res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard-lecteur.html?token=${token}`);
-  } catch(e) {
-    res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
   }
 }
