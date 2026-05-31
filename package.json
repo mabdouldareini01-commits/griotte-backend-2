@@ -2,7 +2,7 @@
   "name": "griotte-backend",
   "version": "1.0.0",
   "scripts": {
-    "build": "nest build",
+    "build": "nest build","postinstall": "prisma generate",
     "start:dev": "nest start --watch",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
