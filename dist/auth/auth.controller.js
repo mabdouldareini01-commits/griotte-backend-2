@@ -18,12 +18,17 @@ const swagger_1 = require("@nestjs/swagger");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = require("bcryptjs");
 const jwt_1 = require("@nestjs/jwt");
+const otp_service_1 = require("./otp.service");
 let AuthController = class AuthController {
-    constructor(prisma, jwt) {
+    constructor(prisma, jwt, otp) {
         this.prisma = prisma;
         this.jwt = jwt;
+        this.otp = otp;
     }
     async register(body) {
+        const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
+        if (existing)
+            return { message: 'Email déjà utilisé' };
         const hashed = await bcrypt.hash(body.password, 12);
         const user = await this.prisma.user.create({
             data: {
@@ -31,11 +36,23 @@ let AuthController = class AuthController {
                 password: hashed,
                 name: body.name,
                 role: body.role || 'READER',
+                verified: false,
                 wallet: { create: { balance: 0 } },
             },
         });
+        const code = this.otp.generateOtp();
+        await this.otp.saveOtp(user.email, code);
+        await this.otp.sendOtp(user.email, code);
+        return { message: 'OTP envoyé', email: user.email };
+    }
+    async verifyOtp(body) {
+        const valid = await this.otp.verifyOtp(body.email, body.code);
+        if (!valid)
+            return { message: 'Code invalide ou expiré' };
+        await this.prisma.user.update({ where: { email: body.email }, data: { verified: true } });
+        const user = await this.prisma.user.findUnique({ where: { email: body.email } });
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-        return { accessToken: token, refreshToken: token };
+        return { accessToken: token, refreshToken: token, role: user.role };
     }
     async login(body) {
         const user = await this.prisma.user.findUnique({ where: { email: body.email } });
@@ -79,6 +96,7 @@ let AuthController = class AuthController {
                         name: googleUser.name,
                         password: '',
                         role: 'READER',
+                        verified: true,
                         wallet: { create: { balance: 0 } },
                     },
                 });
@@ -99,6 +117,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
+__decorate([
+    (0, common_1.Post)('verify-otp'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyOtp", null);
 __decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
@@ -125,6 +150,7 @@ exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService,
-        jwt_1.JwtService])
+        jwt_1.JwtService,
+        otp_service_1.OtpService])
 ], AuthController);
 //# sourceMappingURL=auth.controller.js.map

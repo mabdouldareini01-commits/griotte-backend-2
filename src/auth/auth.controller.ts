@@ -3,6 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { OtpService } from './otp.service';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -10,10 +11,13 @@ export class AuthController {
   constructor(
     private prisma: PrismaService,
     private jwt: JwtService,
+    private otp: OtpService,
   ) {}
 
   @Post('register')
   async register(@Body() body: any) {
+    const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
+    if (existing) return { message: 'Email déjà utilisé' };
     const hashed = await bcrypt.hash(body.password, 12);
     const user = await this.prisma.user.create({
       data: {
@@ -21,11 +25,24 @@ export class AuthController {
         password: hashed,
         name: body.name,
         role: body.role || 'READER',
+        verified: false,
         wallet: { create: { balance: 0 } },
       },
     });
+    const code = this.otp.generateOtp();
+    await this.otp.saveOtp(user.email, code);
+    await this.otp.sendOtp(user.email, code);
+    return { message: 'OTP envoyé', email: user.email };
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(@Body() body: any) {
+    const valid = await this.otp.verifyOtp(body.email, body.code);
+    if (!valid) return { message: 'Code invalide ou expiré' };
+    await this.prisma.user.update({ where: { email: body.email }, data: { verified: true } });
+    const user = await this.prisma.user.findUnique({ where: { email: body.email } });
     const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-    return { accessToken: token, refreshToken: token };
+    return { accessToken: token, refreshToken: token, role: user.role };
   }
 
   @Post('login')
@@ -73,6 +90,7 @@ export class AuthController {
             name: googleUser.name,
             password: '',
             role: 'READER',
+            verified: true,
             wallet: { create: { balance: 0 } },
           },
         });
