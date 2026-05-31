@@ -39,7 +39,7 @@ export class AuthController {
   }
 }@Get('google')
 async googleAuth(@Res() res: any) {
-  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=792385948983-j9a3kh1rvg5kp1p4n6k745s1f45lcf0f.apps.googleusercontent.com&redirect_uri=https://griotte-backend-2-production.up.railway.app/api/v1/auth/google/callback&response_type=code&scope=email profile`;
+  const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
   res.redirect(url);
 }
 
@@ -49,7 +49,7 @@ async googleCallback(@Query('code') code: string, @Res() res: any) {
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, client_id: '792385948983-j9a3kh1rvg5kp1p4n6k745s1f45lcf0f.apps.googleusercontent.com', client_secret: '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', redirect_uri: 'https://griotte-backend-2-production.up.railway.app/api/v1/auth/google/callback', grant_type: 'authorization_code' }),
+      body: JSON.stringify({ code, client_id: '${process.env.GOOGLE_CLIENT_ID}', client_secret: '${process.env.GOOGLE_CLIENT_SECRET}', redirect_uri: '${process.env.GOOGLE_CALLBACK_URL}', grant_type: 'authorization_code' }),
     });
     const tokenData = await tokenRes.json();
     const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: `Bearer ${tokenData.access_token}` } });
