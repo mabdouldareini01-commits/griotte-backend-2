@@ -2,7 +2,7 @@
 cmds = ["npm install --legacy-peer-deps"]
 
 [phases.build]
-cmds = ["npm run build", "npx prisma generate"]
+cmds = ["npm run build", "npx prisma generate --no-engine"]
 
 [start]
 cmd = "node dist/main.js"
