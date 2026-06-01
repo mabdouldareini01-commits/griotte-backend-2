@@ -32,9 +32,11 @@ export declare class AuthController {
         message: string;
         accessToken?: undefined;
         refreshToken?: undefined;
+        role?: undefined;
     } | {
         accessToken: string;
         refreshToken: string;
+        role: import(".prisma/client").$Enums.Role;
         message?: undefined;
     }>;
     googleAuth(res: any): Promise<any>;

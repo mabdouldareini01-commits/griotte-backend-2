@@ -60,7 +60,7 @@ let AuthController = class AuthController {
         if (!valid)
             return { message: 'Identifiants invalides' };
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-        return { accessToken: token, refreshToken: token };
+        return { accessToken: token, refreshToken: token, role: user.role };
     }
     async googleAuth(res) {
         const clientId = process.env.GOOGLE_CLIENT_ID;

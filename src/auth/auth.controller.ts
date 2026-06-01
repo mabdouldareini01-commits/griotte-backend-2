@@ -50,7 +50,7 @@ export class AuthController {
     const valid = await bcrypt.compare(body.password, user.password);
     if (!valid) return { message: 'Identifiants invalides' };
     const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-    return { accessToken: token, refreshToken: token };
+    return { accessToken: token, refreshToken: token, role: user.role };
   }
 
   @Get('google')
