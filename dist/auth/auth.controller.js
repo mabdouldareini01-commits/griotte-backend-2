@@ -84,11 +84,15 @@ let AuthController = class AuthController {
     async recharge(auth, body) {
         const token = auth?.replace('Bearer ', '');
         const payload = this.jwt.verify(token);
-        const wallet = await this.prisma.wallet.update({
+        const wallet = await this.prisma.wallet.findUnique({ where: { userId: payload.sub } });
+        if (body.amount < 0 && (wallet?.balance || 0) + body.amount < 0) {
+            return { error: 'Solde insuffisant', balance: wallet?.balance || 0 };
+        }
+        const updated = await this.prisma.wallet.update({
             where: { userId: payload.sub },
             data: { balance: { increment: body.amount } },
         });
-        return { balance: wallet.balance };
+        return { balance: updated.balance };
     }
     async getBooks() {
         const books = await this.prisma.book.findMany({

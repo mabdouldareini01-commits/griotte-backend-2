@@ -43,7 +43,11 @@ export declare class AuthController {
     recharge(auth: string, body: {
         amount: number;
     }): Promise<{
+        error: string;
         balance: number;
+    } | {
+        balance: number;
+        error?: undefined;
     }>;
     getBooks(): Promise<({
         author: {
