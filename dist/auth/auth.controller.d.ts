@@ -44,6 +44,11 @@ export declare class AuthController {
         email: string;
         role: import(".prisma/client").$Enums.Role;
         balance: number;
+    } | {
+        balance: number;
+        name?: undefined;
+        email?: undefined;
+        role?: undefined;
     }>;
     getBooks(): Promise<({
         author: {

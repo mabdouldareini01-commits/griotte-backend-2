@@ -62,7 +62,16 @@ async getMe(@Headers('authorization') auth: string) {
     include: { wallet: true },
   });
   return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
-}@Get('books-public')
+@Post('recharge')
+async recharge(@Headers('authorization') auth: string, @Body() body: { amount: number }) {
+  const token = auth?.replace('Bearer ', '');
+  const payload = this.jwt.verify(token);
+  const wallet = await this.prisma.wallet.update({
+    where: { userId: payload.sub },
+    data: { balance: { increment: body.amount } },
+  });
+  return { balance: wallet.balance };
+}}@Get('books-public')
 async getBooks() {
   const books = await this.prisma.book.findMany({
     where: { status: 'PUBLISHED' },
