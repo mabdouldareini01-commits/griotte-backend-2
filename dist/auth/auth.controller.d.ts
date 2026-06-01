@@ -39,6 +39,12 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
         message?: undefined;
     }>;
+    getMe(auth: string): Promise<{
+        name: string;
+        email: string;
+        role: import(".prisma/client").$Enums.Role;
+        balance: number;
+    }>;
     getBooks(): Promise<({
         author: {
             name: string;

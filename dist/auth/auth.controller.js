@@ -62,6 +62,15 @@ let AuthController = class AuthController {
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
         return { accessToken: token, refreshToken: token, role: user.role };
     }
+    async getMe(auth) {
+        const token = auth?.replace('Bearer ', '');
+        const payload = this.jwt.verify(token);
+        const user = await this.prisma.user.findUnique({
+            where: { id: payload.sub },
+            include: { wallet: true },
+        });
+        return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
+    }
     async getBooks() {
         const books = await this.prisma.book.findMany({
             where: { status: 'PUBLISHED' },
@@ -137,6 +146,13 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Get)('me'),
+    __param(0, Headers('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getMe", null);
 __decorate([
     (0, common_1.Get)('books-public'),
     __metadata("design:type", Function),

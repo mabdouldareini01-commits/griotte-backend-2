@@ -53,7 +53,16 @@ export class AuthController {
     return { accessToken: token, refreshToken: token, role: user.role };
   }
 
- @Get('books-public')
+ @Get('me')
+async getMe(@Headers('authorization') auth: string) {
+  const token = auth?.replace('Bearer ', '');
+  const payload = this.jwt.verify(token);
+  const user = await this.prisma.user.findUnique({
+    where: { id: payload.sub },
+    include: { wallet: true },
+  });
+  return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
+}@Get('books-public')
 async getBooks() {
   const books = await this.prisma.book.findMany({
     where: { status: 'PUBLISHED' },
