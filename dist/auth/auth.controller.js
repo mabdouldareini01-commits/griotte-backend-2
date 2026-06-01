@@ -148,7 +148,7 @@ __decorate([
 ], AuthController.prototype, "login", null);
 __decorate([
     (0, common_1.Get)('me'),
-    __param(0, Headers('authorization')),
+    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
