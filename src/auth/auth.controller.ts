@@ -54,7 +54,29 @@ export class AuthController {
     return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
   }
 
-  @Post('recharge')
+  @Post('verify-payment')
+async verifyPayment(@Headers('authorization') auth: string, @Body() body: { transaction_id: string; amount: number }) {
+  const token = auth?.replace('Bearer ', '');
+  const payload = this.jwt.verify(token);
+  
+  // Vérifier la transaction avec FedaPay
+  const response = await fetch(`https://api.fedapay.com/v1/transactions/${body.transaction_id}`, {
+    headers: {
+      'Authorization': `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
+      'Content-Type': 'application/json'
+    }
+  });
+  const transaction: any = await response.json();
+  
+  if (transaction.v1?.transaction?.status === 'approved') {
+    const wallet = await this.prisma.wallet.update({
+      where: { userId: payload.sub },
+      data: { balance: { increment: body.amount } },
+    });
+    return { success: true, balance: wallet.balance };
+  }
+  return { success: false };
+}@Post('recharge')
   async recharge(@Headers('authorization') auth: string, @Body() body: { amount: number }) {
     const token = auth?.replace('Bearer ', '');
     const payload = this.jwt.verify(token);

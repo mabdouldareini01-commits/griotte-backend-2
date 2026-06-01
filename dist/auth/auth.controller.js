@@ -62,6 +62,25 @@ let AuthController = class AuthController {
         });
         return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
     }
+    async verifyPayment(auth, body) {
+        const token = auth?.replace('Bearer ', '');
+        const payload = this.jwt.verify(token);
+        const response = await fetch(`https://api.fedapay.com/v1/transactions/${body.transaction_id}`, {
+            headers: {
+                'Authorization': `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const transaction = await response.json();
+        if (transaction.v1?.transaction?.status === 'approved') {
+            const wallet = await this.prisma.wallet.update({
+                where: { userId: payload.sub },
+                data: { balance: { increment: body.amount } },
+            });
+            return { success: true, balance: wallet.balance };
+        }
+        return { success: false };
+    }
     async recharge(auth, body) {
         const token = auth?.replace('Bearer ', '');
         const payload = this.jwt.verify(token);
@@ -144,6 +163,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMe", null);
+__decorate([
+    (0, common_1.Post)('verify-payment'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyPayment", null);
 __decorate([
     (0, common_1.Post)('recharge'),
     __param(0, (0, common_1.Headers)('authorization')),

@@ -30,6 +30,16 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
         balance: number;
     }>;
+    verifyPayment(auth: string, body: {
+        transaction_id: string;
+        amount: number;
+    }): Promise<{
+        success: boolean;
+        balance: number;
+    } | {
+        success: boolean;
+        balance?: undefined;
+    }>;
     recharge(auth: string, body: {
         amount: number;
     }): Promise<{
