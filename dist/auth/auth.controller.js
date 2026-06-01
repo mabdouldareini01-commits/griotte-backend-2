@@ -62,6 +62,14 @@ let AuthController = class AuthController {
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
         return { accessToken: token, refreshToken: token, role: user.role };
     }
+    async getBooks() {
+        const books = await this.prisma.book.findMany({
+            where: { status: 'PUBLISHED' },
+            include: { author: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+        return books;
+    }
     async googleAuth(res) {
         const clientId = process.env.GOOGLE_CLIENT_ID;
         const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
@@ -129,6 +137,12 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
+__decorate([
+    (0, common_1.Get)('books-public'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getBooks", null);
 __decorate([
     (0, common_1.Get)('google'),
     __param(0, (0, common_1.Res)()),

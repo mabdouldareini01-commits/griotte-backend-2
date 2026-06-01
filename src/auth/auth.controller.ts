@@ -53,7 +53,15 @@ export class AuthController {
     return { accessToken: token, refreshToken: token, role: user.role };
   }
 
-  @Get('google')
+ @Get('books-public')
+async getBooks() {
+  const books = await this.prisma.book.findMany({
+    where: { status: 'PUBLISHED' },
+    include: { author: { select: { name: true } } },
+    orderBy: { createdAt: 'desc' },
+  });
+  return books;
+} @Get('google')
   async googleAuth(@Res() res: any) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const callbackUrl = process.env.GOOGLE_CALLBACK_URL;

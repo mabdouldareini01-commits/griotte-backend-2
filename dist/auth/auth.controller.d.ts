@@ -39,6 +39,41 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
         message?: undefined;
     }>;
+    getBooks(): Promise<({
+        author: {
+            name: string;
+        };
+    } & {
+        id: string;
+        country: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        authorId: string;
+        title: string;
+        subtitle: string | null;
+        synopsis: string;
+        coverColor: string;
+        coverImage: string | null;
+        genre: string;
+        subGenre: string | null;
+        language: string;
+        tags: string[];
+        targetAudience: string;
+        sensitiveContent: string;
+        totalPages: number;
+        authorNote: string | null;
+        status: import(".prisma/client").$Enums.BookStatus;
+        publishedAt: Date | null;
+        scheduledAt: Date | null;
+        rejectionNote: string | null;
+        isPublic: boolean;
+        isFreeFirst: boolean;
+        yearWritten: number | null;
+        totalReads: number;
+        totalRevenue: number;
+        averageRating: number;
+        reviewCount: number;
+    })[]>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;
 }
