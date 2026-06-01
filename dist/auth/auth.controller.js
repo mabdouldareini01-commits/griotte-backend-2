@@ -28,37 +28,28 @@ let AuthController = class AuthController {
     async register(body) {
         const existing = await this.prisma.user.findUnique({ where: { email: body.email } });
         if (existing)
-            return { message: 'Email déjà utilisé' };
-        const hashed = await bcrypt.hash(body.password, 12);
+            throw new Error('Email déjà utilisé');
+        const hash = await bcrypt.hash(body.password, 12);
         const user = await this.prisma.user.create({
             data: {
                 email: body.email,
-                password: hashed,
+                password: hash,
                 name: body.name,
-                role: body.role || 'READER',
-                verified: false,
+                role: body.role === 'AUTHOR' ? 'AUTHOR' : 'READER',
+                verified: true,
                 wallet: { create: { balance: 0 } },
             },
         });
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
         return { accessToken: token, refreshToken: token, role: user.role };
     }
-    async verifyOtp(body) {
-        const valid = await this.otp.verifyOtp(body.email, body.code);
-        if (!valid)
-            return { message: 'Code invalide ou expiré' };
-        await this.prisma.user.update({ where: { email: body.email }, data: { verified: true } });
-        const user = await this.prisma.user.findUnique({ where: { email: body.email } });
-        const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-        return { accessToken: token, refreshToken: token, role: user.role };
-    }
     async login(body) {
         const user = await this.prisma.user.findUnique({ where: { email: body.email } });
         if (!user)
-            return { message: 'Identifiants invalides' };
-        const valid = await bcrypt.compare(body.password, user.password);
+            throw new Error('Identifiants invalides');
+        const valid = await bcrypt.compare(body.password, user.password || '');
         if (!valid)
-            return { message: 'Identifiants invalides' };
+            throw new Error('Identifiants invalides');
         const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
         return { accessToken: token, refreshToken: token, role: user.role };
     }
@@ -70,16 +61,15 @@ let AuthController = class AuthController {
             include: { wallet: true },
         });
         return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
-        recharge(, auth, string, , body, { amount: number });
-        {
-            const token = auth?.replace('Bearer ', '');
-            const payload = this.jwt.verify(token);
-            const wallet = await this.prisma.wallet.update({
-                where: { userId: payload.sub },
-                data: { balance: { increment: body.amount } },
-            });
-            return { balance: wallet.balance };
-        }
+    }
+    async recharge(auth, body) {
+        const token = auth?.replace('Bearer ', '');
+        const payload = this.jwt.verify(token);
+        const wallet = await this.prisma.wallet.update({
+            where: { userId: payload.sub },
+            data: { balance: { increment: body.amount } },
+        });
+        return { balance: wallet.balance };
     }
     async getBooks() {
         const books = await this.prisma.book.findMany({
@@ -90,9 +80,7 @@ let AuthController = class AuthController {
         return books;
     }
     async googleAuth(res) {
-        const clientId = process.env.GOOGLE_CLIENT_ID;
-        const callbackUrl = process.env.GOOGLE_CALLBACK_URL;
-        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${callbackUrl}&response_type=code&scope=email profile`;
+        const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
         return res.redirect(url);
     }
     async googleCallback(code, res) {
@@ -143,13 +131,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "register", null);
 __decorate([
-    (0, common_1.Post)('verify-otp'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "verifyOtp", null);
-__decorate([
     (0, common_1.Post)('login'),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
@@ -163,6 +144,14 @@ __decorate([
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMe", null);
+__decorate([
+    (0, common_1.Post)('recharge'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "recharge", null);
 __decorate([
     (0, common_1.Get)('books-public'),
     __metadata("design:type", Function),

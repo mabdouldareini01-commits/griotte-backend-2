@@ -6,49 +6,34 @@ export declare class AuthController {
     private jwt;
     private otp;
     constructor(prisma: PrismaService, jwt: JwtService, otp: OtpService);
-    register(body: any): Promise<{
-        message: string;
-        accessToken?: undefined;
-        refreshToken?: undefined;
-        role?: undefined;
-    } | {
+    register(body: {
+        email: string;
+        password: string;
+        name: string;
+        role: string;
+    }): Promise<{
         accessToken: string;
         refreshToken: string;
         role: import(".prisma/client").$Enums.Role;
-        message?: undefined;
     }>;
-    verifyOtp(body: any): Promise<{
-        message: string;
-        accessToken?: undefined;
-        refreshToken?: undefined;
-        role?: undefined;
-    } | {
+    login(body: {
+        email: string;
+        password: string;
+    }): Promise<{
         accessToken: string;
         refreshToken: string;
         role: import(".prisma/client").$Enums.Role;
-        message?: undefined;
-    }>;
-    login(body: any): Promise<{
-        message: string;
-        accessToken?: undefined;
-        refreshToken?: undefined;
-        role?: undefined;
-    } | {
-        accessToken: string;
-        refreshToken: string;
-        role: import(".prisma/client").$Enums.Role;
-        message?: undefined;
     }>;
     getMe(auth: string): Promise<{
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
         balance: number;
-    } | {
+    }>;
+    recharge(auth: string, body: {
+        amount: number;
+    }): Promise<{
         balance: number;
-        name?: undefined;
-        email?: undefined;
-        role?: undefined;
     }>;
     getBooks(): Promise<({
         author: {
