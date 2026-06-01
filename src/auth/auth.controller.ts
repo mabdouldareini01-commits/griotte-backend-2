@@ -97,7 +97,15 @@ async verifyPayment(@Headers('authorization') auth: string, @Body() body: { tran
     return books;
   }
 
-  @Get('google')
+  @Get('wallets/balance')
+async getWalletBalance(@Headers('authorization') auth: string) {
+  const token = auth?.replace('Bearer ', '');
+  const payload = this.jwt.verify(token);
+  const wallet = await this.prisma.wallet.findUnique({
+    where: { userId: payload.sub },
+  });
+  return { balance: wallet?.balance || 0 };
+}@Get('google')
   async googleAuth(@Res() res: any) {
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
     return res.redirect(url);

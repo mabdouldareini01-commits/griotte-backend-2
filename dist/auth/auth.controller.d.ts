@@ -80,6 +80,9 @@ export declare class AuthController {
         averageRating: number;
         reviewCount: number;
     })[]>;
+    getWalletBalance(auth: string): Promise<{
+        balance: number;
+    }>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;
 }

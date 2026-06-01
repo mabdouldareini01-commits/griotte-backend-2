@@ -98,6 +98,14 @@ let AuthController = class AuthController {
         });
         return books;
     }
+    async getWalletBalance(auth) {
+        const token = auth?.replace('Bearer ', '');
+        const payload = this.jwt.verify(token);
+        const wallet = await this.prisma.wallet.findUnique({
+            where: { userId: payload.sub },
+        });
+        return { balance: wallet?.balance || 0 };
+    }
     async googleAuth(res) {
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
         return res.redirect(url);
@@ -185,6 +193,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getBooks", null);
+__decorate([
+    (0, common_1.Get)('wallets/balance'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getWalletBalance", null);
 __decorate([
     (0, common_1.Get)('google'),
     __param(0, (0, common_1.Res)()),
