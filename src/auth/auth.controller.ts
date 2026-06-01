@@ -29,10 +29,8 @@ export class AuthController {
         wallet: { create: { balance: 0 } },
       },
     });
-    const code = this.otp.generateOtp();
-    await this.otp.saveOtp(user.email, code);
-    await this.otp.sendOtp(user.email, code);
-    return { message: 'OTP envoyé', email: user.email };
+    const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
+    return { accessToken: token, refreshToken: token, role: user.role };
   }
 
   @Post('verify-otp')

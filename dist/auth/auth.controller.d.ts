@@ -8,10 +8,14 @@ export declare class AuthController {
     constructor(prisma: PrismaService, jwt: JwtService, otp: OtpService);
     register(body: any): Promise<{
         message: string;
-        email?: undefined;
+        accessToken?: undefined;
+        refreshToken?: undefined;
+        role?: undefined;
     } | {
-        message: string;
-        email: string;
+        accessToken: string;
+        refreshToken: string;
+        role: import(".prisma/client").$Enums.Role;
+        message?: undefined;
     }>;
     verifyOtp(body: any): Promise<{
         message: string;
