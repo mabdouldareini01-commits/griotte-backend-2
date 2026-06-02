@@ -85,6 +85,36 @@ export declare class AuthController {
         reviewCount: number;
     })[]>;
     getWalletBalance(auth: string): Promise<{
+        id: string;
+        country: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        authorId: string;
+        title: string;
+        subtitle: string | null;
+        synopsis: string;
+        coverColor: string;
+        coverImage: string | null;
+        genre: string;
+        subGenre: string | null;
+        language: string;
+        tags: string[];
+        targetAudience: string;
+        sensitiveContent: string;
+        totalPages: number;
+        authorNote: string | null;
+        status: import(".prisma/client").$Enums.BookStatus;
+        publishedAt: Date | null;
+        scheduledAt: Date | null;
+        rejectionNote: string | null;
+        isPublic: boolean;
+        isFreeFirst: boolean;
+        yearWritten: number | null;
+        totalReads: number;
+        totalRevenue: number;
+        averageRating: number;
+        reviewCount: number;
+    } | {
         balance: number;
     }>;
     googleAuth(res: any): Promise<any>;

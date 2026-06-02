@@ -109,6 +109,23 @@ let AuthController = class AuthController {
             where: { userId: payload.sub },
         });
         return { balance: wallet?.balance || 0 };
+        publishBook(, auth, string, , body, { title: string, synopsis: string, genre: string, totalPages: number });
+        {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const book = await this.prisma.book.create({
+                data: {
+                    title: body.title,
+                    synopsis: body.synopsis,
+                    genre: body.genre,
+                    totalPages: body.totalPages,
+                    authorId: payload.sub,
+                    status: 'PUBLISHED',
+                    language: 'fr',
+                },
+            });
+            return book;
+        }
     }
     async googleAuth(res) {
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
