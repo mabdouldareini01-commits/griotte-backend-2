@@ -30,16 +30,6 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
         balance: number;
     }>;
-    verifyPayment(auth: string, body: {
-        transaction_id: string;
-        amount: number;
-    }): Promise<{
-        success: boolean;
-        balance: number;
-    } | {
-        success: boolean;
-        balance?: undefined;
-    }>;
     recharge(auth: string, body: {
         amount: number;
     }): Promise<{
@@ -48,6 +38,45 @@ export declare class AuthController {
     } | {
         balance: number;
         error?: undefined;
+    }>;
+    getWalletBalance(auth: string): Promise<{
+        balance: number;
+    }>;
+    publishBook(auth: string, body: {
+        title: string;
+        synopsis: string;
+        genre: string;
+        totalPages: number;
+    }): Promise<{
+        id: string;
+        country: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        subtitle: string | null;
+        synopsis: string;
+        coverColor: string;
+        coverImage: string | null;
+        genre: string;
+        subGenre: string | null;
+        language: string;
+        tags: string[];
+        targetAudience: string;
+        sensitiveContent: string;
+        totalPages: number;
+        authorNote: string | null;
+        status: import(".prisma/client").$Enums.BookStatus;
+        publishedAt: Date | null;
+        scheduledAt: Date | null;
+        rejectionNote: string | null;
+        isPublic: boolean;
+        isFreeFirst: boolean;
+        yearWritten: number | null;
+        totalReads: number;
+        totalRevenue: number;
+        averageRating: number;
+        reviewCount: number;
+        authorId: string;
     }>;
     getBooks(): Promise<({
         author: {
@@ -58,7 +87,6 @@ export declare class AuthController {
         country: string | null;
         createdAt: Date;
         updatedAt: Date;
-        authorId: string;
         title: string;
         subtitle: string | null;
         synopsis: string;
@@ -83,40 +111,8 @@ export declare class AuthController {
         totalRevenue: number;
         averageRating: number;
         reviewCount: number;
+        authorId: string;
     })[]>;
-    getWalletBalance(auth: string): Promise<{
-        id: string;
-        country: string | null;
-        createdAt: Date;
-        updatedAt: Date;
-        authorId: string;
-        title: string;
-        subtitle: string | null;
-        synopsis: string;
-        coverColor: string;
-        coverImage: string | null;
-        genre: string;
-        subGenre: string | null;
-        language: string;
-        tags: string[];
-        targetAudience: string;
-        sensitiveContent: string;
-        totalPages: number;
-        authorNote: string | null;
-        status: import(".prisma/client").$Enums.BookStatus;
-        publishedAt: Date | null;
-        scheduledAt: Date | null;
-        rejectionNote: string | null;
-        isPublic: boolean;
-        isFreeFirst: boolean;
-        yearWritten: number | null;
-        totalReads: number;
-        totalRevenue: number;
-        averageRating: number;
-        reviewCount: number;
-    } | {
-        balance: number;
-    }>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;
 }

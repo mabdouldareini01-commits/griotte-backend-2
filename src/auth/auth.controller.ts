@@ -54,29 +54,7 @@ export class AuthController {
     return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
   }
 
-  @Post('verify-payment')
-async verifyPayment(@Headers('authorization') auth: string, @Body() body: { transaction_id: string; amount: number }) {
-  const token = auth?.replace('Bearer ', '');
-  const payload = this.jwt.verify(token);
-  
-  // Vérifier la transaction avec FedaPay
-  const response = await fetch(`https://api.fedapay.com/v1/transactions/${body.transaction_id}`, {
-    headers: {
-      'Authorization': `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
-      'Content-Type': 'application/json'
-    }
-  });
-  const transaction: any = await response.json();
-  
-  if (transaction.v1?.transaction?.status === 'approved') {
-    const wallet = await this.prisma.wallet.update({
-      where: { userId: payload.sub },
-      data: { balance: { increment: body.amount } },
-    });
-    return { success: true, balance: wallet.balance };
-  }
-  return { success: false };
-}@Post('recharge')
+  @Post('recharge')
   async recharge(@Headers('authorization') auth: string, @Body() body: { amount: number }) {
     const token = auth?.replace('Bearer ', '');
     const payload = this.jwt.verify(token);
@@ -91,6 +69,34 @@ async verifyPayment(@Headers('authorization') auth: string, @Body() body: { tran
     return { balance: updated.balance };
   }
 
+  @Get('wallets/balance')
+  async getWalletBalance(@Headers('authorization') auth: string) {
+    const token = auth?.replace('Bearer ', '');
+    const payload = this.jwt.verify(token);
+    const wallet = await this.prisma.wallet.findUnique({
+      where: { userId: payload.sub },
+    });
+    return { balance: wallet?.balance || 0 };
+  }
+
+  @Post('publish-book')
+  async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number }) {
+    const token = auth?.replace('Bearer ', '');
+    const payload = this.jwt.verify(token);
+    const book = await this.prisma.book.create({
+      data: {
+        title: body.title,
+        synopsis: body.synopsis,
+        genre: body.genre,
+        totalPages: body.totalPages,
+        authorId: payload.sub,
+        status: 'PUBLISHED',
+        language: 'fr',
+      },
+    });
+    return book;
+  }
+
   @Get('books-public')
   async getBooks() {
     const books = await this.prisma.book.findMany({
@@ -101,32 +107,7 @@ async verifyPayment(@Headers('authorization') auth: string, @Body() body: { tran
     return books;
   }
 
-  @Get('wallets/balance')
-async getWalletBalance(@Headers('authorization') auth: string) {
-  const token = auth?.replace('Bearer ', '');
-  const payload = this.jwt.verify(token);
-  const wallet = await this.prisma.wallet.findUnique({
-    where: { userId: payload.sub },
-  });
-  return { balance: wallet?.balance || 0 };
-@Post('publish-book')
-async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number }) {
-  const token = auth?.replace('Bearer ', '');
-  const payload = this.jwt.verify(token);
-  const book = await this.prisma.book.create({
-    data: {
-      title: body.title,
-      synopsis: body.synopsis,
-      genre: body.genre,
-      totalPages: body.totalPages,
-      authorId: payload.sub,
-      status: 'PUBLISHED',
-      language: 'fr',
-    },
-  });
-  return book;
-}
-}@Get('google')
+  @Get('google')
   async googleAuth(@Res() res: any) {
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
     return res.redirect(url);

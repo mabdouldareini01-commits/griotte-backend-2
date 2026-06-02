@@ -62,25 +62,6 @@ let AuthController = class AuthController {
         });
         return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
     }
-    async verifyPayment(auth, body) {
-        const token = auth?.replace('Bearer ', '');
-        const payload = this.jwt.verify(token);
-        const response = await fetch(`https://api.fedapay.com/v1/transactions/${body.transaction_id}`, {
-            headers: {
-                'Authorization': `Bearer ${process.env.FEDAPAY_SECRET_KEY}`,
-                'Content-Type': 'application/json'
-            }
-        });
-        const transaction = await response.json();
-        if (transaction.v1?.transaction?.status === 'approved') {
-            const wallet = await this.prisma.wallet.update({
-                where: { userId: payload.sub },
-                data: { balance: { increment: body.amount } },
-            });
-            return { success: true, balance: wallet.balance };
-        }
-        return { success: false };
-    }
     async recharge(auth, body) {
         const token = auth?.replace('Bearer ', '');
         const payload = this.jwt.verify(token);
@@ -94,14 +75,6 @@ let AuthController = class AuthController {
         });
         return { balance: updated.balance };
     }
-    async getBooks() {
-        const books = await this.prisma.book.findMany({
-            where: { status: 'PUBLISHED' },
-            include: { author: { select: { name: true } } },
-            orderBy: { createdAt: 'desc' },
-        });
-        return books;
-    }
     async getWalletBalance(auth) {
         const token = auth?.replace('Bearer ', '');
         const payload = this.jwt.verify(token);
@@ -109,23 +82,30 @@ let AuthController = class AuthController {
             where: { userId: payload.sub },
         });
         return { balance: wallet?.balance || 0 };
-        publishBook(, auth, string, , body, { title: string, synopsis: string, genre: string, totalPages: number });
-        {
-            const token = auth?.replace('Bearer ', '');
-            const payload = this.jwt.verify(token);
-            const book = await this.prisma.book.create({
-                data: {
-                    title: body.title,
-                    synopsis: body.synopsis,
-                    genre: body.genre,
-                    totalPages: body.totalPages,
-                    authorId: payload.sub,
-                    status: 'PUBLISHED',
-                    language: 'fr',
-                },
-            });
-            return book;
-        }
+    }
+    async publishBook(auth, body) {
+        const token = auth?.replace('Bearer ', '');
+        const payload = this.jwt.verify(token);
+        const book = await this.prisma.book.create({
+            data: {
+                title: body.title,
+                synopsis: body.synopsis,
+                genre: body.genre,
+                totalPages: body.totalPages,
+                authorId: payload.sub,
+                status: 'PUBLISHED',
+                language: 'fr',
+            },
+        });
+        return book;
+    }
+    async getBooks() {
+        const books = await this.prisma.book.findMany({
+            where: { status: 'PUBLISHED' },
+            include: { author: { select: { name: true } } },
+            orderBy: { createdAt: 'desc' },
+        });
+        return books;
     }
     async googleAuth(res) {
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
@@ -193,14 +173,6 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMe", null);
 __decorate([
-    (0, common_1.Post)('verify-payment'),
-    __param(0, (0, common_1.Headers)('authorization')),
-    __param(1, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, Object]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "verifyPayment", null);
-__decorate([
     (0, common_1.Post)('recharge'),
     __param(0, (0, common_1.Headers)('authorization')),
     __param(1, (0, common_1.Body)()),
@@ -209,18 +181,26 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "recharge", null);
 __decorate([
-    (0, common_1.Get)('books-public'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "getBooks", null);
-__decorate([
     (0, common_1.Get)('wallets/balance'),
     __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getWalletBalance", null);
+__decorate([
+    (0, common_1.Post)('publish-book'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "publishBook", null);
+__decorate([
+    (0, common_1.Get)('books-public'),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getBooks", null);
 __decorate([
     (0, common_1.Get)('google'),
     __param(0, (0, common_1.Res)()),
