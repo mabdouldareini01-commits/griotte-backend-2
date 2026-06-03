@@ -47,6 +47,7 @@ export declare class AuthController {
         synopsis: string;
         genre: string;
         totalPages: number;
+        tags?: string[];
     }): Promise<{
         id: string;
         country: string | null;
@@ -113,7 +114,7 @@ export declare class AuthController {
         reviewCount: number;
         authorId: string;
     })[]>;
-    getMyBooks(req: any): Promise<{
+    getMyBooks(auth: string): Promise<{
         id: string;
         country: string | null;
         createdAt: Date;
@@ -144,7 +145,7 @@ export declare class AuthController {
         reviewCount: number;
         authorId: string;
     }[]>;
-    getMyStats(req: any): Promise<{
+    getMyStats(auth: string): Promise<{
         totalBooks: number;
         totalPages: any;
         totalReaders: number;
@@ -180,6 +181,12 @@ export declare class AuthController {
             reviewCount: number;
             authorId: string;
         }[];
+    } | {
+        totalBooks: number;
+        totalPages: number;
+        books: any[];
+        totalReaders?: undefined;
+        totalRevenue?: undefined;
     }>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;

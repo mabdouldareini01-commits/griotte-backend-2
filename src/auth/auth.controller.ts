@@ -81,7 +81,7 @@ export class AuthController {
   }
 
   @Post('publish-book')
-  async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number }) {
+  async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number; tags?: string[] }) {
     const token = auth?.replace('Bearer ', '');
     const payload = this.jwt.verify(token);
     const book = await this.prisma.book.create({
@@ -93,6 +93,7 @@ export class AuthController {
         authorId: payload.sub,
         status: 'PUBLISHED',
         language: 'fr',
+        tags: body.tags || [],
       },
     });
     return book;
@@ -109,30 +110,36 @@ export class AuthController {
   }
 
   @Get('my-books')
-  @UseGuards(AuthGuard('jwt'))
-  async getMyBooks(@Req() req: any) {
-    const books = await this.prisma.book.findMany({
-      where: { authorId: req.user.userId },
-      orderBy: { createdAt: 'desc' },
-    });
-    return books;
+  async getMyBooks(@Headers('authorization') auth: string) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const authorId = payload.id || payload.userId || payload.sub;
+      const books = await this.prisma.book.findMany({
+        where: { authorId },
+        orderBy: { createdAt: 'desc' },
+      });
+      return books;
+    } catch(e) {
+      return [];
+    }
   }
 
   @Get('my-stats')
-  @UseGuards(AuthGuard('jwt'))
-  async getMyStats(@Req() req: any) {
-    const books = await this.prisma.book.findMany({
-      where: { authorId: req.user.userId },
-    });
-    const totalBooks = books.length;
-    const totalPages = books.reduce((sum: number, b: any) => sum + (b.totalPages || 0), 0);
-    return {
-      totalBooks,
-      totalPages,
-      totalReaders: 0,
-      totalRevenue: 0,
-      books,
-    };
+  async getMyStats(@Headers('authorization') auth: string) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const authorId = payload.id || payload.userId || payload.sub;
+      const books = await this.prisma.book.findMany({
+        where: { authorId },
+      });
+      const totalBooks = books.length;
+      const totalPages = books.reduce((sum: number, b: any) => sum + (b.totalPages || 0), 0);
+      return { totalBooks, totalPages, totalReaders: 0, totalRevenue: 0, books };
+    } catch(e) {
+      return { totalBooks: 0, totalPages: 0, books: [] };
+    }
   }
 
   @Get('google')

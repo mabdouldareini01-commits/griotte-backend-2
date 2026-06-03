@@ -14,7 +14,6 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
-const passport_1 = require("@nestjs/passport");
 const swagger_1 = require("@nestjs/swagger");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = require("bcryptjs");
@@ -96,6 +95,7 @@ let AuthController = class AuthController {
                 authorId: payload.sub,
                 status: 'PUBLISHED',
                 language: 'fr',
+                tags: body.tags || [],
             },
         });
         return book;
@@ -108,26 +108,36 @@ let AuthController = class AuthController {
         });
         return books;
     }
-    async getMyBooks(req) {
-        const books = await this.prisma.book.findMany({
-            where: { authorId: req.user.userId },
-            orderBy: { createdAt: 'desc' },
-        });
-        return books;
+    async getMyBooks(auth) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const authorId = payload.id || payload.userId || payload.sub;
+            const books = await this.prisma.book.findMany({
+                where: { authorId },
+                orderBy: { createdAt: 'desc' },
+            });
+            return books;
+        }
+        catch (e) {
+            return [];
+        }
     }
-    async getMyStats(req) {
-        const books = await this.prisma.book.findMany({
-            where: { authorId: req.user.userId },
-        });
-        const totalBooks = books.length;
-        const totalPages = books.reduce((sum, b) => sum + (b.totalPages || 0), 0);
-        return {
-            totalBooks,
-            totalPages,
-            totalReaders: 0,
-            totalRevenue: 0,
-            books,
-        };
+    async getMyStats(auth) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const authorId = payload.id || payload.userId || payload.sub;
+            const books = await this.prisma.book.findMany({
+                where: { authorId },
+            });
+            const totalBooks = books.length;
+            const totalPages = books.reduce((sum, b) => sum + (b.totalPages || 0), 0);
+            return { totalBooks, totalPages, totalReaders: 0, totalRevenue: 0, books };
+        }
+        catch (e) {
+            return { totalBooks: 0, totalPages: 0, books: [] };
+        }
     }
     async googleAuth(res) {
         const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
@@ -225,18 +235,16 @@ __decorate([
 ], AuthController.prototype, "getBooks", null);
 __decorate([
     (0, common_1.Get)('my-books'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    __param(0, (0, common_1.Req)()),
+    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMyBooks", null);
 __decorate([
     (0, common_1.Get)('my-stats'),
-    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
-    __param(0, (0, common_1.Req)()),
+    __param(0, (0, common_1.Headers)('authorization')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [String]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMyStats", null);
 __decorate([
