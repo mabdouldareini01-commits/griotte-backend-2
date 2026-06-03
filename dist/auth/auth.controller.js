@@ -143,7 +143,7 @@ let AuthController = class AuthController {
                 });
             }
             const token = this.jwt.sign({ sub: user.id, email: user.email, role: user.role });
-            return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard-lecteur.html?token=${token}`);
+            return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-dashboard.html?token=${token}`);
         }
         catch (e) {
             return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
