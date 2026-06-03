@@ -191,6 +191,36 @@ export declare class AuthController {
     }>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;
+    getBookChapters(bookId: string): Promise<{
+        number: number;
+        id: string;
+        title: string;
+        content: string;
+        pageCount: number;
+        wordCount: number;
+        isFree: boolean;
+    }[]>;
+    addChapter(bookId: string, auth: string, body: {
+        title: string;
+        content: string;
+        number: number;
+        isFree?: boolean;
+    }): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        bookId: string;
+        content: string | null;
+        fileUrl: string | null;
+        pageCount: number;
+        wordCount: number;
+        isFree: boolean;
+        isPublished: boolean;
+    } | {
+        error: any;
+    }>;
     getAdminUsers(auth: string): Promise<({
         wallet: {
             id: string;

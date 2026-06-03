@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, Query, Res, Headers, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res, Headers, UseGuards, Req, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
@@ -186,6 +186,39 @@ export class AuthController {
     } catch(e) {
       return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
     }
+  }
+
+  @Get('books/:id/chapters')
+  async getBookChapters(@Param('id') bookId: string) {
+    try {
+      const chapters = await this.prisma.chapter.findMany({
+        where: { bookId, isPublished: true },
+        orderBy: { number: 'asc' },
+        select: { id: true, number: true, title: true, content: true, pageCount: true, wordCount: true, isFree: true }
+      });
+      return chapters;
+    } catch(e) { return []; }
+  }
+
+  @Post('books/:id/chapters')
+  async addChapter(@Param('id') bookId: string, @Headers('authorization') auth: string, @Body() body: { title: string; content: string; number: number; isFree?: boolean }) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const chapter = await this.prisma.chapter.create({
+        data: {
+          bookId,
+          number: body.number || 1,
+          title: body.title,
+          content: body.content,
+          wordCount: body.content ? body.content.split(/\s+/).length : 0,
+          pageCount: body.content ? Math.ceil(body.content.split(/\s+/).length / 250) : 0,
+          isFree: body.isFree || false,
+          isPublished: true,
+        }
+      });
+      return chapter;
+    } catch(e) { return { error: e.message }; }
   }
 
   @Get('admin/users')

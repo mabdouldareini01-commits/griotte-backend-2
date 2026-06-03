@@ -182,6 +182,41 @@ let AuthController = class AuthController {
             return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
         }
     }
+    async getBookChapters(bookId) {
+        try {
+            const chapters = await this.prisma.chapter.findMany({
+                where: { bookId, isPublished: true },
+                orderBy: { number: 'asc' },
+                select: { id: true, number: true, title: true, content: true, pageCount: true, wordCount: true, isFree: true }
+            });
+            return chapters;
+        }
+        catch (e) {
+            return [];
+        }
+    }
+    async addChapter(bookId, auth, body) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const chapter = await this.prisma.chapter.create({
+                data: {
+                    bookId,
+                    number: body.number || 1,
+                    title: body.title,
+                    content: body.content,
+                    wordCount: body.content ? body.content.split(/\s+/).length : 0,
+                    pageCount: body.content ? Math.ceil(body.content.split(/\s+/).length / 250) : 0,
+                    isFree: body.isFree || false,
+                    isPublished: true,
+                }
+            });
+            return chapter;
+        }
+        catch (e) {
+            return { error: e.message };
+        }
+    }
     async getAdminUsers(auth) {
         try {
             const token = auth?.replace('Bearer ', '');
@@ -328,6 +363,22 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleCallback", null);
+__decorate([
+    (0, common_1.Get)('books/:id/chapters'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getBookChapters", null);
+__decorate([
+    (0, common_1.Post)('books/:id/chapters'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Headers)('authorization')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "addChapter", null);
 __decorate([
     (0, common_1.Get)('admin/users'),
     __param(0, (0, common_1.Headers)('authorization')),
