@@ -277,4 +277,46 @@ export class AuthController {
       return { success: true, user };
     } catch(e) { return { error: 'Failed' }; }
   }
+
+  @Get('books/:id')
+  async getBookById(@Param('id') id: string) {
+    try {
+      const book = await this.prisma.book.findUnique({
+        where: { id },
+        include: { author: { select: { name: true } }, chapters: { orderBy: { number: 'asc' } } }
+      });
+      return book || { error: 'Not found' };
+    } catch(e) { return { error: e.message }; }
+  }
+
+  @Post('books/:id/delete')
+  async deleteBook(@Param('id') id: string, @Headers('authorization') auth: string) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const book = await this.prisma.book.findUnique({ where: { id } });
+      if (!book) return { error: 'Not found' };
+      if (book.authorId !== payload.sub && payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      await this.prisma.book.delete({ where: { id } });
+      return { success: true };
+    } catch(e) { return { error: e.message }; }
+  }
+
+  @Post('books/:id/status')
+  async updateBookStatus(@Param('id') id: string, @Headers('authorization') auth: string, @Body() body: { status: string }) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const book = await this.prisma.book.findUnique({ where: { id } });
+      if (!book) return { error: 'Not found' };
+      if (book.authorId !== payload.sub && payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      const validStatuses = ['PUBLISHED', 'DRAFT', 'SUSPENDED', 'ARCHIVED'];
+      const newStatus = validStatuses.includes(body.status) ? body.status : 'DRAFT';
+      const updated = await this.prisma.book.update({
+        where: { id },
+        data: { status: newStatus as any }
+      });
+      return updated;
+    } catch(e) { return { error: e.message }; }
+  }
 }

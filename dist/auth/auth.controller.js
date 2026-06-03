@@ -282,6 +282,55 @@ let AuthController = class AuthController {
             return { error: 'Failed' };
         }
     }
+    async getBookById(id) {
+        try {
+            const book = await this.prisma.book.findUnique({
+                where: { id },
+                include: { author: { select: { name: true } }, chapters: { orderBy: { number: 'asc' } } }
+            });
+            return book || { error: 'Not found' };
+        }
+        catch (e) {
+            return { error: e.message };
+        }
+    }
+    async deleteBook(id, auth) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const book = await this.prisma.book.findUnique({ where: { id } });
+            if (!book)
+                return { error: 'Not found' };
+            if (book.authorId !== payload.sub && payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            await this.prisma.book.delete({ where: { id } });
+            return { success: true };
+        }
+        catch (e) {
+            return { error: e.message };
+        }
+    }
+    async updateBookStatus(id, auth, body) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const book = await this.prisma.book.findUnique({ where: { id } });
+            if (!book)
+                return { error: 'Not found' };
+            if (book.authorId !== payload.sub && payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            const validStatuses = ['PUBLISHED', 'DRAFT', 'SUSPENDED', 'ARCHIVED'];
+            const newStatus = validStatuses.includes(body.status) ? body.status : 'DRAFT';
+            const updated = await this.prisma.book.update({
+                where: { id },
+                data: { status: newStatus }
+            });
+            return updated;
+        }
+        catch (e) {
+            return { error: e.message };
+        }
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -409,6 +458,30 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "verifyAuthor", null);
+__decorate([
+    (0, common_1.Get)('books/:id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getBookById", null);
+__decorate([
+    (0, common_1.Post)('books/:id/delete'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "deleteBook", null);
+__decorate([
+    (0, common_1.Post)('books/:id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Headers)('authorization')),
+    __param(2, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "updateBookStatus", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),

@@ -328,4 +328,97 @@ export declare class AuthController {
         };
         error?: undefined;
     }>;
+    getBookById(id: string): Promise<({
+        author: {
+            name: string;
+        };
+        chapters: {
+            number: number;
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            title: string;
+            bookId: string;
+            content: string | null;
+            fileUrl: string | null;
+            pageCount: number;
+            wordCount: number;
+            isFree: boolean;
+            isPublished: boolean;
+        }[];
+    } & {
+        id: string;
+        country: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        subtitle: string | null;
+        synopsis: string;
+        coverColor: string;
+        coverImage: string | null;
+        genre: string;
+        subGenre: string | null;
+        language: string;
+        tags: string[];
+        targetAudience: string;
+        sensitiveContent: string;
+        totalPages: number;
+        authorNote: string | null;
+        status: import(".prisma/client").$Enums.BookStatus;
+        publishedAt: Date | null;
+        scheduledAt: Date | null;
+        rejectionNote: string | null;
+        isPublic: boolean;
+        isFreeFirst: boolean;
+        yearWritten: number | null;
+        totalReads: number;
+        totalRevenue: number;
+        averageRating: number;
+        reviewCount: number;
+        authorId: string;
+    }) | {
+        error: any;
+    }>;
+    deleteBook(id: string, auth: string): Promise<{
+        success: boolean;
+        error?: undefined;
+    } | {
+        error: any;
+        success?: undefined;
+    }>;
+    updateBookStatus(id: string, auth: string, body: {
+        status: string;
+    }): Promise<{
+        id: string;
+        country: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        subtitle: string | null;
+        synopsis: string;
+        coverColor: string;
+        coverImage: string | null;
+        genre: string;
+        subGenre: string | null;
+        language: string;
+        tags: string[];
+        targetAudience: string;
+        sensitiveContent: string;
+        totalPages: number;
+        authorNote: string | null;
+        status: import(".prisma/client").$Enums.BookStatus;
+        publishedAt: Date | null;
+        scheduledAt: Date | null;
+        rejectionNote: string | null;
+        isPublic: boolean;
+        isFreeFirst: boolean;
+        yearWritten: number | null;
+        totalReads: number;
+        totalRevenue: number;
+        averageRating: number;
+        reviewCount: number;
+        authorId: string;
+    } | {
+        error: any;
+    }>;
 }
