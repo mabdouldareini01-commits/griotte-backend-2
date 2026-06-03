@@ -107,6 +107,33 @@ export class AuthController {
     return books;
   }
 
+  @Get('my-books')
+  @UseGuards(JwtAuthGuard)
+  async getMyBooks(@Request() req: any) {
+    const books = await this.prisma.book.findMany({
+      where: { authorId: req.user.userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    return books;
+  }
+
+  @Get('my-stats')
+  @UseGuards(JwtAuthGuard)
+  async getMyStats(@Request() req: any) {
+    const books = await this.prisma.book.findMany({
+      where: { authorId: req.user.userId },
+    });
+    const totalBooks = books.length;
+    const totalPages = books.reduce((sum: number, b: any) => sum + (b.totalPages || 0), 0);
+    return {
+      totalBooks,
+      totalPages,
+      totalReaders: 0,
+      totalRevenue: 0,
+      books,
+    };
+  }
+
   @Get('google')
   async googleAuth(@Res() res: any) {
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_CALLBACK_URL}&response_type=code&scope=email profile`;
