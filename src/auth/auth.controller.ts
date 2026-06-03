@@ -1,4 +1,5 @@
-import { Controller, Post, Body, Get, Query, Res, Headers } from '@nestjs/common';
+import { Controller, Post, Body, Get, Query, Res, Headers, UseGuards, Req } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags } from '@nestjs/swagger';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -108,8 +109,8 @@ export class AuthController {
   }
 
   @Get('my-books')
-  @UseGuards(JwtAuthGuard)
-  async getMyBooks(@Request() req: any) {
+  @UseGuards(AuthGuard('jwt'))
+  async getMyBooks(@Req() req: any) {
     const books = await this.prisma.book.findMany({
       where: { authorId: req.user.userId },
       orderBy: { createdAt: 'desc' },
@@ -118,8 +119,8 @@ export class AuthController {
   }
 
   @Get('my-stats')
-  @UseGuards(JwtAuthGuard)
-  async getMyStats(@Request() req: any) {
+  @UseGuards(AuthGuard('jwt'))
+  async getMyStats(@Req() req: any) {
     const books = await this.prisma.book.findMany({
       where: { authorId: req.user.userId },
     });

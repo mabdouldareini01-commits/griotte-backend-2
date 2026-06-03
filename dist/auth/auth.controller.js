@@ -14,6 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
+const passport_1 = require("@nestjs/passport");
 const swagger_1 = require("@nestjs/swagger");
 const prisma_service_1 = require("../prisma/prisma.service");
 const bcrypt = require("bcryptjs");
@@ -224,16 +225,16 @@ __decorate([
 ], AuthController.prototype, "getBooks", null);
 __decorate([
     (0, common_1.Get)('my-books'),
-    UseGuards(JwtAuthGuard),
-    __param(0, Request()),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMyBooks", null);
 __decorate([
     (0, common_1.Get)('my-stats'),
-    UseGuards(JwtAuthGuard),
-    __param(0, Request()),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('jwt')),
+    __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
