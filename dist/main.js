@@ -14,6 +14,9 @@ async function bootstrap() {
         transform: true,
         transformOptions: { enableImplicitConversion: true },
     }));
+    const express = require('express');
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ limit: '10mb', extended: true }));
     app.enableCors({
         origin: ['https://griotte-frontend-git-main-lawenignina.vercel.app', 'http://localhost:3000'],
         credentials: true,

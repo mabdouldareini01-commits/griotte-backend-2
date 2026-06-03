@@ -24,6 +24,11 @@ async function bootstrap() {
     }),
   );
 
+  // ─── Body size limit (images base64)
+  const express = require('express');
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
   // ─── CORS
   app.enableCors({
    origin: ['https://griotte-frontend-git-main-lawenignina.vercel.app', 'http://localhost:3000'],
