@@ -81,7 +81,7 @@ export class AuthController {
   }
 
   @Post('publish-book')
-  async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number; tags?: string[] }) {
+  async publishBook(@Headers('authorization') auth: string, @Body() body: { title: string; synopsis: string; genre: string; totalPages: number; tags?: string[]; coverImage?: string }) {
     const token = auth?.replace('Bearer ', '');
     const payload = this.jwt.verify(token);
     const book = await this.prisma.book.create({
@@ -94,6 +94,7 @@ export class AuthController {
         status: 'PUBLISHED',
         language: 'fr',
         tags: body.tags || [],
+        coverImage: body.coverImage || null,
       },
     });
     return book;
@@ -185,5 +186,62 @@ export class AuthController {
     } catch(e) {
       return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
     }
+  }
+
+  @Get('admin/users')
+  async getAdminUsers(@Headers('authorization') auth: string) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      if (payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      const users = await this.prisma.user.findMany({
+        include: { wallet: true },
+        orderBy: { createdAt: 'desc' },
+      });
+      return users;
+    } catch(e) { return []; }
+  }
+
+  @Get('admin/stats')
+  async getAdminStats(@Headers('authorization') auth: string) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      if (payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      const totalUsers = await this.prisma.user.count();
+      const totalBooks = await this.prisma.book.count();
+      const totalAuthors = await this.prisma.user.count({ where: { role: 'AUTHOR' } });
+      const totalReaders = await this.prisma.user.count({ where: { role: 'READER' } });
+      const totalWallet = await this.prisma.wallet.aggregate({ _sum: { balance: true } });
+      return { totalUsers, totalBooks, totalAuthors, totalReaders, totalBalance: totalWallet._sum.balance || 0 };
+    } catch(e) { return {}; }
+  }
+
+  @Post('admin/suspend-user')
+  async suspendUser(@Headers('authorization') auth: string, @Body() body: { userId: string; suspend: boolean }) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      if (payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      const user = await this.prisma.user.update({
+        where: { id: body.userId },
+        data: { isSuspended: body.suspend },
+      });
+      return { success: true, user };
+    } catch(e) { return { error: 'Failed' }; }
+  }
+
+  @Post('admin/verify-author')
+  async verifyAuthor(@Headers('authorization') auth: string, @Body() body: { userId: string }) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      if (payload.role !== 'ADMIN') return { error: 'Unauthorized' };
+      const user = await this.prisma.user.update({
+        where: { id: body.userId },
+        data: { role: 'AUTHOR', isVerified: true },
+      });
+      return { success: true, user };
+    } catch(e) { return { error: 'Failed' }; }
   }
 }

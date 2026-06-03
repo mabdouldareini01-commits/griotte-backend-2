@@ -96,6 +96,7 @@ let AuthController = class AuthController {
                 status: 'PUBLISHED',
                 language: 'fr',
                 tags: body.tags || [],
+                coverImage: body.coverImage || null,
             },
         });
         return book;
@@ -181,6 +182,71 @@ let AuthController = class AuthController {
             return res.redirect(`https://griotte-frontend-git-main-lawenignina.vercel.app/griotte-landing.html?error=google`);
         }
     }
+    async getAdminUsers(auth) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            if (payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            const users = await this.prisma.user.findMany({
+                include: { wallet: true },
+                orderBy: { createdAt: 'desc' },
+            });
+            return users;
+        }
+        catch (e) {
+            return [];
+        }
+    }
+    async getAdminStats(auth) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            if (payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            const totalUsers = await this.prisma.user.count();
+            const totalBooks = await this.prisma.book.count();
+            const totalAuthors = await this.prisma.user.count({ where: { role: 'AUTHOR' } });
+            const totalReaders = await this.prisma.user.count({ where: { role: 'READER' } });
+            const totalWallet = await this.prisma.wallet.aggregate({ _sum: { balance: true } });
+            return { totalUsers, totalBooks, totalAuthors, totalReaders, totalBalance: totalWallet._sum.balance || 0 };
+        }
+        catch (e) {
+            return {};
+        }
+    }
+    async suspendUser(auth, body) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            if (payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            const user = await this.prisma.user.update({
+                where: { id: body.userId },
+                data: { isSuspended: body.suspend },
+            });
+            return { success: true, user };
+        }
+        catch (e) {
+            return { error: 'Failed' };
+        }
+    }
+    async verifyAuthor(auth, body) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            if (payload.role !== 'ADMIN')
+                return { error: 'Unauthorized' };
+            const user = await this.prisma.user.update({
+                where: { id: body.userId },
+                data: { role: 'AUTHOR', isVerified: true },
+            });
+            return { success: true, user };
+        }
+        catch (e) {
+            return { error: 'Failed' };
+        }
+    }
 };
 exports.AuthController = AuthController;
 __decorate([
@@ -262,6 +328,36 @@ __decorate([
     __metadata("design:paramtypes", [String, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "googleCallback", null);
+__decorate([
+    (0, common_1.Get)('admin/users'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getAdminUsers", null);
+__decorate([
+    (0, common_1.Get)('admin/stats'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "getAdminStats", null);
+__decorate([
+    (0, common_1.Post)('admin/suspend-user'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "suspendUser", null);
+__decorate([
+    (0, common_1.Post)('admin/verify-author'),
+    __param(0, (0, common_1.Headers)('authorization')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "verifyAuthor", null);
 exports.AuthController = AuthController = __decorate([
     (0, swagger_1.ApiTags)('auth'),
     (0, common_1.Controller)('auth'),

@@ -48,6 +48,7 @@ export declare class AuthController {
         genre: string;
         totalPages: number;
         tags?: string[];
+        coverImage?: string;
     }): Promise<{
         id: string;
         country: string | null;
@@ -190,4 +191,111 @@ export declare class AuthController {
     }>;
     googleAuth(res: any): Promise<any>;
     googleCallback(code: string, res: any): Promise<any>;
+    getAdminUsers(auth: string): Promise<({
+        wallet: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            balance: number;
+            userId: string;
+        };
+    } & {
+        id: string;
+        email: string;
+        password: string | null;
+        googleId: string | null;
+        name: string;
+        avatar: string | null;
+        verified: boolean;
+        country: string | null;
+        role: import(".prisma/client").$Enums.Role;
+        isVerified: boolean;
+        isSuspended: boolean;
+        suspendedAt: Date | null;
+        suspendReason: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+        lastLoginAt: Date | null;
+    })[] | {
+        error: string;
+    }>;
+    getAdminStats(auth: string): Promise<{
+        error: string;
+        totalUsers?: undefined;
+        totalBooks?: undefined;
+        totalAuthors?: undefined;
+        totalReaders?: undefined;
+        totalBalance?: undefined;
+    } | {
+        totalUsers: number;
+        totalBooks: number;
+        totalAuthors: number;
+        totalReaders: number;
+        totalBalance: number;
+        error?: undefined;
+    } | {
+        error?: undefined;
+        totalUsers?: undefined;
+        totalBooks?: undefined;
+        totalAuthors?: undefined;
+        totalReaders?: undefined;
+        totalBalance?: undefined;
+    }>;
+    suspendUser(auth: string, body: {
+        userId: string;
+        suspend: boolean;
+    }): Promise<{
+        error: string;
+        success?: undefined;
+        user?: undefined;
+    } | {
+        success: boolean;
+        user: {
+            id: string;
+            email: string;
+            password: string | null;
+            googleId: string | null;
+            name: string;
+            avatar: string | null;
+            verified: boolean;
+            country: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            isVerified: boolean;
+            isSuspended: boolean;
+            suspendedAt: Date | null;
+            suspendReason: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            lastLoginAt: Date | null;
+        };
+        error?: undefined;
+    }>;
+    verifyAuthor(auth: string, body: {
+        userId: string;
+    }): Promise<{
+        error: string;
+        success?: undefined;
+        user?: undefined;
+    } | {
+        success: boolean;
+        user: {
+            id: string;
+            email: string;
+            password: string | null;
+            googleId: string | null;
+            name: string;
+            avatar: string | null;
+            verified: boolean;
+            country: string | null;
+            role: import(".prisma/client").$Enums.Role;
+            isVerified: boolean;
+            isSuspended: boolean;
+            suspendedAt: Date | null;
+            suspendReason: string | null;
+            createdAt: Date;
+            updatedAt: Date;
+            lastLoginAt: Date | null;
+        };
+        error?: undefined;
+    }>;
 }
