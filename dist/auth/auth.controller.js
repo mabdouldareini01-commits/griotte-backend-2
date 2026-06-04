@@ -60,7 +60,7 @@ let AuthController = class AuthController {
             where: { id: payload.sub },
             include: { wallet: true },
         });
-        return { name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
+        return { id: user.id, name: user.name, email: user.email, role: user.role, balance: user.wallet?.balance || 0 };
     }
     async recharge(auth, body) {
         const token = auth?.replace('Bearer ', '');

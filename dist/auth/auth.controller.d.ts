@@ -25,6 +25,7 @@ export declare class AuthController {
         role: import(".prisma/client").$Enums.Role;
     }>;
     getMe(auth: string): Promise<{
+        id: string;
         name: string;
         email: string;
         role: import(".prisma/client").$Enums.Role;
