@@ -221,6 +221,25 @@ export class AuthController {
     } catch(e) { return { error: e.message }; }
   }
 
+  @Post('books/:bookId/chapters/:chapterId/update')
+  async updateChapter(@Param('bookId') bookId: string, @Param('chapterId') chapterId: string, @Headers('authorization') auth: string, @Body() body: any) {
+    try {
+      const token = auth?.replace('Bearer ', '');
+      const payload: any = this.jwt.verify(token);
+      const chapter = await this.prisma.chapter.update({
+        where: { id: chapterId },
+        data: {
+          title: body.title,
+          content: body.content,
+          isFree: body.isFree,
+          wordCount: body.content ? body.content.split(/\s+/).length : 0,
+          pageCount: body.content ? Math.ceil(body.content.split(/\s+/).length / 250) : 0,
+        }
+      });
+      return chapter;
+    } catch(e) { return { error: e.message }; }
+  }
+
   @Get('admin/users')
   async getAdminUsers(@Headers('authorization') auth: string) {
     try {

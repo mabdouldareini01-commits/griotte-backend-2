@@ -217,6 +217,26 @@ let AuthController = class AuthController {
             return { error: e.message };
         }
     }
+    async updateChapter(bookId, chapterId, auth, body) {
+        try {
+            const token = auth?.replace('Bearer ', '');
+            const payload = this.jwt.verify(token);
+            const chapter = await this.prisma.chapter.update({
+                where: { id: chapterId },
+                data: {
+                    title: body.title,
+                    content: body.content,
+                    isFree: body.isFree,
+                    wordCount: body.content ? body.content.split(/\s+/).length : 0,
+                    pageCount: body.content ? Math.ceil(body.content.split(/\s+/).length / 250) : 0,
+                }
+            });
+            return chapter;
+        }
+        catch (e) {
+            return { error: e.message };
+        }
+    }
     async getAdminUsers(auth) {
         try {
             const token = auth?.replace('Bearer ', '');
@@ -428,6 +448,16 @@ __decorate([
     __metadata("design:paramtypes", [String, String, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "addChapter", null);
+__decorate([
+    (0, common_1.Post)('books/:bookId/chapters/:chapterId/update'),
+    __param(0, (0, common_1.Param)('bookId')),
+    __param(1, (0, common_1.Param)('chapterId')),
+    __param(2, (0, common_1.Headers)('authorization')),
+    __param(3, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, String, String, Object]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "updateChapter", null);
 __decorate([
     (0, common_1.Get)('admin/users'),
     __param(0, (0, common_1.Headers)('authorization')),

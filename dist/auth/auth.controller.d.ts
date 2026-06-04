@@ -221,6 +221,22 @@ export declare class AuthController {
     } | {
         error: any;
     }>;
+    updateChapter(bookId: string, chapterId: string, auth: string, body: any): Promise<{
+        number: number;
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        title: string;
+        bookId: string;
+        content: string | null;
+        fileUrl: string | null;
+        pageCount: number;
+        wordCount: number;
+        isFree: boolean;
+        isPublished: boolean;
+    } | {
+        error: any;
+    }>;
     getAdminUsers(auth: string): Promise<({
         wallet: {
             id: string;
